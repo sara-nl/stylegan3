@@ -2,8 +2,11 @@
 
 # Run a Jupyter notebook server on the login node
 
-module load 2021
+source load_env.sh
 module load JupyterHub/1.4.1-GCCcore-10.3.0
+
+#Make sure the widgetsnbextension is enabled
+jupyter nbextension enable --py widgetsnbextension
 
 # Choose random port and print instructions to connect
 PORT=`shuf -i 5000-5999 -n 1`
