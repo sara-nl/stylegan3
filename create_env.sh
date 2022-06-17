@@ -13,3 +13,4 @@ pip install imgui
 pip install glfw
 pip install pyopengl
 pip install imageio-ffmpeg
+pip install tensorboard
