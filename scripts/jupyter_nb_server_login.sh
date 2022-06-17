@@ -3,7 +3,8 @@
 # Run a Jupyter notebook server on the login node
 
 source load_env.sh
-module load JupyterHub/1.4.1-GCCcore-10.3.0
+# Don't think this is needed, I already installed notebooks in the virtualenv
+# module load JupyterHub/1.4.1-GCCcore-10.3.0
 
 #Make sure the widgetsnbextension is enabled
 jupyter nbextension enable --py widgetsnbextension
