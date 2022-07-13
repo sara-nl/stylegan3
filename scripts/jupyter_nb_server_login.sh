@@ -5,6 +5,10 @@
 source load_env.sh
 # Don't think this is needed, I already installed notebooks in the virtualenv
 # module load JupyterHub/1.4.1-GCCcore-10.3.0
+module load IPython/7.25.0-GCCcore-10.3.0
+
+echo "Loaded modules:"
+module list
 
 #Make sure the widgetsnbextension is enabled
 jupyter nbextension enable --py widgetsnbextension
