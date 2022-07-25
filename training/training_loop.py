@@ -120,6 +120,13 @@ def training_loop(
     cudnn_benchmark         = True,     # Enable torch.backends.cudnn.benchmark?
     abort_fn                = None,     # Callback function for determining whether to abort training. Must return consistent results across ranks.
     progress_fn             = None,     # Callback function for updating training progress. Called for all ranks.
+    profile                 = False,    # Create a profiling trace using torch.profiler.profile
+    profile_wait            = 10,       # Input for the torch.profiler.schedule
+    profile_warmup          = 10,       # Input for the torch.profiler.schedule
+    profile_active          = 10,       # Input for the torch.profiler.schedule
+    profile_repeat          = 1,        # Number of cycles for which to profile
+    profile_memory          = True,     # Input for torch.profiler.profile
+    profile_flops           = True,     # Estimate FLOPS for matrix multiplications and 2D conv
 ):
     # Initialize.
     start_time = time.time()
@@ -238,6 +245,33 @@ def training_loop(
             stats_tfevents = tensorboard.SummaryWriter(run_dir)
         except ImportError as err:
             print('Skipping tfevents export:', err)
+
+    # Create profiler
+    if profile:
+        prof_logdir = os.path.join(run_dir, 'profile')
+        if rank == 0:
+            print('Creating profiler object')
+            print(f'Profiler log dir: {prof_logdir}')
+            print(f'Profiler wait steps per cycle: {profile_wait}')
+            print(f'Profiler warmup steps per cycle: {profile_warmup}')
+            print(f'Profiler active steps per cycle: {profile_active}')
+            print(f'Profiler number of cycles: {profile_repeat}')
+        profiler = torch.profiler.profile(
+            activities = [
+                torch.profiler.ProfilerActivity.CPU,
+                torch.profiler.ProfilerActivity.CUDA,
+            ],
+            schedule = torch.profiler.schedule(
+                wait = profile_wait,
+                warmup = profile_warmup,
+                active = profile_active,
+                repeat = profile_repeat),
+            on_trace_ready = torch.profiler.tensorboard_trace_handler(prof_logdir, worker_name = f'rank{rank}'),
+            record_shapes = True,
+            profile_memory = profile_memory,
+            with_stack = True,
+            with_flops = profile_flops,
+        )
 
     # Train.
     if rank == 0:
@@ -416,6 +450,11 @@ def training_loop(
         tick_start_nimg = cur_nimg
         tick_start_time = time.time()
         maintenance_time = tick_start_time - tick_end_time
+
+        # Profile step:
+        profiler.step()
+
+        # Break loop when done
         if done:
             break
 

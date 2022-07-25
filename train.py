@@ -162,6 +162,15 @@ def parse_comma_separated_list(s):
 @click.option('--workers',      help='DataLoader worker processes', metavar='INT',              type=click.IntRange(min=1), default=3, show_default=True)
 @click.option('-n','--dry-run', help='Print training options and exit',                         is_flag=True)
 
+# Profiling settings
+@click.option('--profile', help='Create tensorboard profiling trace', metavar='BOOL', type=bool, default=False, show_default=True)
+@click.option('--profile_wait', help='Profiler wait steps per cycle', metavar='INT', type=click.IntRange(min=0), default=10, show_default=True)
+@click.option('--profile_warmup', help='Profiler warmup steps per cycle', metavar='INT', type=click.IntRange(min=0), default=2, show_default=True)
+@click.option('--profile_active', help='Profiler active steps per cycle', metavar='INT', type=click.IntRange(min=1), default=2, show_default=True)
+@click.option('--profile_repeat', help='Profiler number of cycles', metavar='INT', type=click.IntRange(min=1), default=10, show_default=True)
+@click.option('--profile_memory', help='Enable memory profiling', metavar='BOOL', type=bool, default=True, show_default=False)
+@click.option('--profile_flops', help='Estimate FLOPS for matrix multiplication and 2D conv', metavar='BOOL', type=bool, default=True, show_default=True)
+
 def main(**kwargs):
     """Train a GAN using the techniques described in the paper
     "Alias-Free Generative Adversarial Networks".
@@ -273,6 +282,15 @@ def main(**kwargs):
         c.G_kwargs.conv_clamp = c.D_kwargs.conv_clamp = None
     if opts.nobench:
         c.cudnn_benchmark = False
+
+    # Profiling options
+    c.profile = opts.profile
+    c.profile_wait = opts.profile_wait
+    c.profile_warmup = opts.profile_warmup
+    c.profile_active = opts.profile_active
+    c.profile_repeat = opts.profile_repeat
+    c.profile_memory = opts.profile_memory
+#    c.profile_flops = opts.profile_flops
 
     # Description string.
     desc = f'{opts.cfg:s}-{dataset_name:s}-gpus{c.num_gpus:d}-batch{c.batch_size:d}-gamma{c.loss_kwargs.r1_gamma:g}'
